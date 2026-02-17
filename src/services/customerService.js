@@ -6,9 +6,12 @@ import { ref, uploadBytes, getDownloadURL, updateMetadata } from 'firebase/stora
 const mockCustomers = [];
 
 export const addCustomer = async (data) => {
-    // Fallback if Firebase is not initialized (db is undefined)
-    if (!db) {
-        console.warn("Firebase not initialized. Using Mock Service.");
+    // Check if we are using the demo config (missing real credentials)
+    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
+
+    // Fallback if Firebase is not initialized or in demo mode
+    if (!db || isDemo) {
+        console.warn("Firebase not configured or in Demo mode. Using Mock Service.");
         const newCustomer = {
             id: `mock_${Date.now()}`,
             ...data,
@@ -38,9 +41,11 @@ export const uploadCustomerDocument = async (customerId, file, type = 'Contrato'
     // Fallback if file is missing
     if (!file) return null;
 
-    // Fallback if Firebase Storage is not initialized
-    if (!storage) {
-        console.warn("Firebase Storage not initialized. Using Mock Service.");
+    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
+
+    // Fallback if Firebase Storage is not initialized or in demo mode
+    if (!storage || isDemo) {
+        console.warn("Firebase Storage not initialized or Demo mode. Using Mock Service.");
         return new Promise(resolve => setTimeout(() => resolve(`https://mock-url.com/${file.name}`), 1000));
     }
 

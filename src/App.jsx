@@ -10,7 +10,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/customers/new" element={<CustomerLoadPage />} />
-          {/* Add other routes as needed */}
+
+          <Route path="/customers" element={<div className="text-white p-4">Gestión de Clientes (Próximamente)</div>} />
+          <Route path="/documents" element={<div className="text-white p-4">Gestión de Documentos (Próximamente)</div>} />
+          <Route path="/settings" element={<div className="text-white p-4">Configuración (Próximamente)</div>} />
         </Routes>
       </Layout>
     </BrowserRouter>
