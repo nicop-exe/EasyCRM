@@ -1,5 +1,5 @@
 import { db, storage } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, updateMetadata } from 'firebase/storage';
 
 // Mock storage for demo purposes when Firebase is not configured
@@ -77,7 +77,36 @@ export const uploadCustomerDocument = async (customerId, file, type = 'Contrato'
 
         return downloadURL;
     } catch (e) {
-        console.error("Error uploading file: ", e);
-        throw e;
+    }
+};
+
+export const subscribeToCustomers = (callback) => {
+    // Check for demo mode / missing config
+    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
+
+    if (!db || isDemo) {
+        console.warn("Firebase not configured or in Demo mode. Using Mock Subscription.");
+        // Return mock data immediately
+        callback([
+            { id: 'mock_1', name: 'Empresa Demo SA', email: 'contacto@demo.com', priority: 'Alta', status: 'active', createdAt: new Date().toISOString() },
+            { id: 'mock_2', name: 'Cliente Ejemplo', email: 'ejemplo@test.com', priority: 'Media', status: 'active', createdAt: new Date().toISOString() }
+        ]);
+        return () => { }; // Return dummy unsubscribe
+    }
+
+    // Real Firestore implementation
+    try {
+        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const customers = [];
+            querySnapshot.forEach((doc) => {
+                customers.push({ id: doc.id, ...doc.data() });
+            });
+            callback(customers);
+        });
+        return unsubscribe;
+    } catch (error) {
+        console.error("Error subscribing to customers:", error);
+        return () => { };
     }
 };
