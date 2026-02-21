@@ -29,9 +29,9 @@ const STEPS = [
         tip: "La 'Prioridad Alta' dispara alertas inmediatas al equipo de soporte.",
         type: 'select',
         options: [
-            { value: 'high', label: 'Alta', color: 'text-electric-magenta border-electric-magenta' },
-            { value: 'medium', label: 'Media', color: 'text-yellow-400 border-yellow-400' },
-            { value: 'low', label: 'Baja', color: 'text-neon-green border-neon-green' }
+            { value: 'Alta', label: 'Alta', color: 'text-electric-magenta border-electric-magenta' },
+            { value: 'Media', label: 'Media', color: 'text-yellow-400 border-yellow-400' },
+            { value: 'Baja', label: 'Baja', color: 'text-neon-green border-neon-green' }
         ],
         icon: AlertCircle
     },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter } from 'lucide-react';
-import { subscribeToCustomers } from '../services/customerService';
+import { Plus, Search, Filter, AlertTriangle } from 'lucide-react';
+import { subscribeToCustomers, isDemo } from '../services/customerService';
 
 const Dashboard = () => {
     const [customers, setCustomers] = useState([]);
@@ -18,14 +18,25 @@ const Dashboard = () => {
     }, []);
 
     const filteredCustomers = customers.filter(customer => {
-        const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            customer.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const name = customer.name || '';
+        const email = customer.email || '';
+        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesPriority = priorityFilter === 'all' || customer.priority === priorityFilter;
         return matchesSearch && matchesPriority;
     });
 
     return (
         <div>
+            {isDemo && (
+                <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 p-4 rounded-xl mb-6 flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5" />
+                    <div>
+                        <span className="font-bold">Modo Demo Activo:</span> Los datos no se guardan en Firebase. Configura tus credenciales o reinicia el servidor para conectar.
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-8">
                 <h2 className="text-3xl font-bold font-satoshi text-white">Dashboard</h2>
                 <Link
@@ -86,7 +97,7 @@ const Dashboard = () => {
                                         {customer.priority}
                                     </span>
                                     <div className="text-xs text-gray-500">
-                                        {new Date(customer.createdAt).toLocaleDateString()}
+                                        {customer.createdAt?.toDate ? customer.createdAt.toDate().toLocaleDateString() : new Date(customer.createdAt || Date.now()).toLocaleDateString()}
                                     </div>
                                 </div>
                             </div>

@@ -5,9 +5,12 @@ import { ref, uploadBytes, getDownloadURL, updateMetadata } from 'firebase/stora
 // Mock storage for demo purposes when Firebase is not configured
 const mockCustomers = [];
 
+// Check for demo mode / missing config
+export const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
+
+console.log("CustomerService Initialized. Mode:", isDemo ? "DEMO (Mock Data)" : "REAL (Firestore)", "| API Key:", import.meta.env.VITE_FIREBASE_API_KEY ? "Present" : "Missing");
+
 export const addCustomer = async (data) => {
-    // Check if we are using the demo config (missing real credentials)
-    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
 
     // Fallback if Firebase is not initialized or in demo mode
     if (!db || isDemo) {
@@ -41,7 +44,6 @@ export const uploadCustomerDocument = async (customerId, file, type = 'Contrato'
     // Fallback if file is missing
     if (!file) return null;
 
-    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
 
     // Fallback if Firebase Storage is not initialized or in demo mode
     if (!storage || isDemo) {
@@ -81,17 +83,19 @@ export const uploadCustomerDocument = async (customerId, file, type = 'Contrato'
 };
 
 export const subscribeToCustomers = (callback) => {
-    // Check for demo mode / missing config
-    const isDemo = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY.includes('YOUR_') || import.meta.env.VITE_FIREBASE_API_KEY === 'demo-api-key';
 
     if (!db || isDemo) {
         console.warn("Firebase not configured or in Demo mode. Using Mock Subscription.");
-        // Return mock data immediately
-        callback([
-            { id: 'mock_1', name: 'Empresa Demo SA', email: 'contacto@demo.com', priority: 'Alta', status: 'active', createdAt: new Date().toISOString() },
-            { id: 'mock_2', name: 'Cliente Ejemplo', email: 'ejemplo@test.com', priority: 'Media', status: 'active', createdAt: new Date().toISOString() }
-        ]);
-        return () => { }; // Return dummy unsubscribe
+
+        // Initial load
+        callback([...mockCustomers]);
+
+        // Poll for changes in mockCustomers array to simulate real-time updates
+        const interval = setInterval(() => {
+            callback([...mockCustomers]);
+        }, 1000);
+
+        return () => clearInterval(interval);
     }
 
     // Real Firestore implementation
@@ -103,6 +107,8 @@ export const subscribeToCustomers = (callback) => {
                 customers.push({ id: doc.id, ...doc.data() });
             });
             callback(customers);
+        }, (error) => {
+            console.error("Firebase onSnapshot error:", error);
         });
         return unsubscribe;
     } catch (error) {
